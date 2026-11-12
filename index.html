@@ -131,19 +131,17 @@ const badge = t => {
   const m = {'입고파쇄':'b-1','현장파쇄':'b-2','하드파쇄':'b-3','폐기물수거':'b-4','컴퓨터수거':'b-5'};
   return `<span class="badge ${m[t]||'b-etc'}">${t||'-'}</span>`;
 };
-function loadDB() {
-  window.onDataLoaded = function(data) {
+async function loadDB() {
+  try {
+    const res = await fetch(SHEET_URL, { method: 'GET', redirect: 'follow' });
+    const text = await res.text();
+    const data = JSON.parse(text);
     db = Array.isArray(data) ? data : [];
-    syncList();
-    drawRecent();
-  };
-  const old = document.getElementById('jsonp_script');
-  if (old) old.remove();
-  const s = document.createElement('script');
-  s.id = 'jsonp_script';
-  s.src = SHEET_URL + '?callback=onDataLoaded&t=' + Date.now();
-  s.onerror = () => alert('구글 시트 연결 실패: 새 버전으로 배포했는지 확인해 주세요.');
-  document.body.appendChild(s);
+  } catch (e) {
+    alert('로드 확인: ' + e.message);
+  }
+  syncList();
+  drawRecent();
 }
 async function saveDB() {
   await fetch(SHEET_URL, {
