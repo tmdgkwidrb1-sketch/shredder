@@ -122,12 +122,11 @@
   </div>
 </div>
 <script>
-const BIN_ID = "6af5ad77ffd5d16053bbea46";
+const API_URL = "https://jsonbin.io";
 const API_KEY = "$2a$10$JdoKVhnvgIn74GTl6aHmr.3rj8ywjQ5TrOTt5cBdYn9.X4dy8abpu";
-const API_URL = `https://jsonbin.io{BIN_ID}`;
-const $ = i => document.getElementById(i);
+const el = i => document.getElementById(i);
 let db = [], cur = '';
-$('fDate').value = new Date().toISOString().split('T').at(0);
+el('fDate').value = new Date().toISOString().split('T').at(0);
 const won = n => (Number(n)||0).toLocaleString() + '원';
 const badge = t => {
   const m = {'입고파쇄':'b-1','현장파쇄':'b-2','하드파쇄':'b-3','폐기물수거':'b-4','컴퓨터수거':'b-5'};
@@ -139,7 +138,7 @@ async function loadDB() {
     const data = await res.json();
     db = (data.record && Array.isArray(data.record.records)) ? data.record.records : [];
   } catch (e) {
-    alert('데이터를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
+    alert('데이터 로드 오류: ' + e.message);
   }
   syncList();
   drawRecent();
@@ -151,33 +150,32 @@ async function saveDB() {
     body: JSON.stringify({ records: db })
   });
 }
-const syncList = () => { $('cList').innerHTML = [...new Set(db.map(x=>x.name))].map(n=>`<option value="${n}">`).join(''); };
+const syncList = () => { el('cList').innerHTML = [...new Set(db.map(x=>x.name))].map(n=>`<option value="${n}">`).join(''); };
 const drawRecent = () => {
-  if(!db.length) return $('tRecent').innerHTML = '<tr><td colspan="8" style="padding:20px;color:#888">등록된 기록이 없습니다.</td></tr>';
-  $('tRecent').innerHTML = [...db].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).slice(0,10).map(x=>`<tr>
+  if(!db.length) return el('tRecent').innerHTML = '<tr><td colspan="8" style="padding:20px;color:#888">등록된 기록이 없습니다.</td></tr>';
+  el('tRecent').innerHTML = [...db].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).slice(0,10).map(x=>`<tr>
     <td>${x.date}</td><td><span class="link" onclick="showDetail('${x.name.replace(/'/g,"\\'")}')">${x.name}</span></td>
     <td>${badge(x.type)}</td><td>${x.vol}</td><td>${won(x.amt)}</td><td class="${x.unp>0?'red':''}">${won(x.unp)}</td><td>${x.mgr}</td><td>${x.tel}</td>
   </tr>`).join('');
 };
 function showDetail(n) {
-  const q = (n || $('qInput').value).trim();
+  const q = (n || el('qInput').value).trim();
   if(!q) return alert('업체명을 입력하세요.');
   cur = q;
-  $('editBox').style.display = 'none';
+  el('editBox').style.display = 'none';
   const list = db.filter(x=>x.name===q).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
-  $('vHome').style.display = 'none'; $('vDetail').style.display = 'block'; $('dTitle').innerText = '🏢 ' + q;
+  el('vHome').style.display = 'none'; el('vDetail').style.display = 'block'; el('dTitle').innerText = '🏢 ' + q;
   if(!list.length) {
-    $('dMeta').style.display = 'none'; $('sCnt').innerText = '0회'; $('sFirst').innerText = '-'; $('sLast').innerText = '-'; $('sUnp').innerText = '0원';
-    return $('tHist').innerHTML = '<tr><td colspan="8" style="padding:20px;color:#888">거래 기록이 없습니다.</td></tr>';
+    el('dMeta').style.display = 'none'; el('sCnt').innerText = '0회'; el('sFirst').innerText = '-'; el('sLast').innerText = '-'; el('sUnp').innerText = '0원';
+    return el('tHist').innerHTML = '<tr><td colspan="8" style="padding:20px;color:#888">거래 기록이 없습니다.</td></tr>';
   }
-  const top = list.at(0);
-  const first = list.at(-1);
+  const top = list.at(0), first = list.at(-1);
   const types = [...new Set(list.map(x=>x.type).filter(Boolean))].join(', ') || '-';
-  $('dMeta').style.display = 'block';
-  $('dMeta').innerHTML = `👤 <b>담당자:</b> ${top.mgr} &nbsp;|&nbsp; 📞 <b>연락처:</b> ${top.tel} &nbsp;|&nbsp; 🚛 <b>이용 작업:</b> <b>${types}</b><br>📍 <b>주소:</b> ${top.addr}<br><button class="btn-edit" onclick="openEdit()">✏️ 담당자/연락처 수정</button>`;
-  $('sCnt').innerText = list.length + '회'; $('sFirst').innerText = first.date; $('sLast').innerText = top.date;
-  $('sUnp').innerText = won(list.reduce((s,x)=>s+(Number(x.unp)||0),0));
-  $('tHist').innerHTML = list.map(x=>`<tr>
+  el('dMeta').style.display = 'block';
+  el('dMeta').innerHTML = `👤 <b>담당자:</b> ${top.mgr} &nbsp;|&nbsp; 📞 <b>연락처:</b> ${top.tel} &nbsp;|&nbsp; 🚛 <b>이용 작업:</b> <b>${types}</b><br>📍 <b>주소:</b> ${top.addr}<br><button class="btn-edit" onclick="openEdit()">✏️ 담당자/연락처 수정</button>`;
+  el('sCnt').innerText = list.length + '회'; el('sFirst').innerText = first.date; el('sLast').innerText = top.date;
+  el('sUnp').innerText = won(list.reduce((s,x)=>s+(Number(x.unp)||0),0));
+  el('tHist').innerHTML = list.map(x=>`<tr>
     <td><b>${x.date}</b></td><td>${badge(x.type)}</td><td>${x.vol}</td><td>${won(x.amt)}</td><td class="${x.unp>0?'red':''}">${won(x.unp)}</td>
     <td>${x.pay}</td><td>${x.memo}</td>
     <td><button class="btn-red" onclick="delItem(${x.id})">삭제</button></td>
@@ -186,50 +184,42 @@ function showDetail(n) {
 function openEdit() {
   const top = db.filter(x=>x.name===cur).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).at(0);
   if(!top) return;
-  $('eMgr').value = top.mgr === '-' ? '' : top.mgr;
-  $('eTel').value = top.tel === '-' ? '' : top.tel;
-  $('eAddr').value = top.addr === '-' ? '' : top.addr;
-  $('editBox').style.display = 'block';
+  el('eMgr').value = top.mgr === '-' ? '' : top.mgr;
+  el('eTel').value = top.tel === '-' ? '' : top.tel;
+  el('eAddr').value = top.addr === '-' ? '' : top.addr;
+  el('editBox').style.display = 'block';
 }
-$('bCancelEdit').onclick = () => { $('editBox').style.display = 'none'; };
-$('bSaveEdit').onclick = async () => {
-  const mgr = $('eMgr').value.trim() || '-', tel = $('eTel').value.trim() || '-', addr = $('eAddr').value.trim() || '-';
+el('bCancelEdit').onclick = () => { el('editBox').style.display = 'none'; };
+el('bSaveEdit').onclick = async () => {
+  const mgr = el('eMgr').value.trim() || '-', tel = el('eTel').value.trim() || '-', addr = el('eAddr').value.trim() || '-';
   db.forEach(x => { if(x.name === cur) { x.mgr = mgr; x.tel = tel; x.addr = addr; } });
-  await saveDB();
-  showDetail(cur);
-  alert('담당자 및 연락처 정보가 수정되었습니다.');
+  await saveDB(); showDetail(cur); alert('수정되었습니다.');
 };
 async function delItem(id) {
   if(!confirm('삭제할까요?')) return;
-  db = db.filter(x=>x.id!==id);
-  await saveDB();
-  syncList(); showDetail(cur);
+  db = db.filter(x=>x.id!==id); await saveDB(); syncList(); showDetail(cur);
 }
-$('fName').oninput = () => {
-  const val = $('fName').value.trim();
+el('fName').oninput = () => {
+  const val = el('fName').value.trim();
   const found = db.filter(x=>x.name===val).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).at(0);
-  if(found) {
-    $('fMgr').value = found.mgr === '-' ? '' : found.mgr;
-    $('fTel').value = found.tel === '-' ? '' : found.tel;
-    $('fAddr').value = found.addr === '-' ? '' : found.addr;
-  }
+  if(found) { el('fMgr').value = found.mgr==='-'?'':found.mgr; el('fTel').value = found.tel==='-'?'':found.tel; el('fAddr').value = found.addr==='-'?'':found.addr; }
 };
-$('bOpen').onclick = () => { $('fCard').style.display='block'; $('bOpen').style.display='none'; };
-$('bClose').onclick = () => { $('fCard').style.display='none'; $('bOpen').style.display='block'; };
-$('bSearch').onclick = () => showDetail();
-$('qInput').onkeyup = e => { if(e.key==='Enter') showDetail(); };
-$('bBack').onclick = () => { $('vDetail').style.display='none'; $('vHome').style.display='block'; $('qInput').value=''; loadDB(); };
-$('bSave').onclick = async () => {
-  const name = $('fName').value.trim(), date = $('fDate').value;
+el('bOpen').onclick = () => { el('fCard').style.display='block'; el('bOpen').style.display='none'; };
+el('bClose').onclick = () => { el('fCard').style.display='none'; el('bOpen').style.display='block'; };
+el('bSearch').onclick = () => showDetail();
+el('qInput').onkeyup = e => { if(e.key==='Enter') showDetail(); };
+el('bBack').onclick = () => { el('vDetail').style.display='none'; el('vHome').style.display='block'; el('qInput').value=''; loadDB(); };
+el('bSave').onclick = async () => {
+  const name = el('fName').value.trim(), date = el('fDate').value;
   if(!name || !date) return alert('업체명과 날짜는 필수입니다.');
-  $('bSave').disabled = true; $('bSave').innerText = '저장 중...';
-  db.push({ id:Date.now(), name, date, type:$('fType').value, mgr:$('fMgr').value.trim()||'-', tel:$('fTel').value.trim()||'-',
-    addr:$('fAddr').value.trim()||'-', vol:$('fVol').value.trim()||'-', pay:$('fPay').value.trim()||'-',
-    amt:Number($('fAmt').value)||0, unp:Number($('fUnp').value)||0, memo:$('fMemo').value.trim()||'-' });
+  el('bSave').disabled = true; el('bSave').innerText = '저장 중...';
+  db.push({ id:Date.now(), name, date, type:el('fType').value, mgr:el('fMgr').value.trim()||'-', tel:el('fTel').value.trim()||'-',
+    addr:el('fAddr').value.trim()||'-', vol:el('fVol').value.trim()||'-', pay:el('fPay').value.trim()||'-',
+    amt:Number(el('fAmt').value)||0, unp:Number(el('fUnp').value)||0, memo:el('fMemo').value.trim()||'-' });
   await saveDB();
-  ['fName','fMgr','fTel','fAddr','fVol','fPay','fAmt','fUnp','fMemo'].forEach(k=>$(k).value='');
-  $('bSave').disabled = false; $('bSave').innerText = '저장하기';
-  syncList(); $('bClose').click(); drawRecent(); alert('저장되었습니다.');
+  ['fName','fMgr','fTel','fAddr','fVol','fPay','fAmt','fUnp','fMemo'].forEach(k=>el(k).value='');
+  el('bSave').disabled = false; el('bSave').innerText = '저장하기';
+  syncList(); el('bClose').click(); drawRecent(); alert('저장되었습니다.');
 };
 loadDB();
 </script>
