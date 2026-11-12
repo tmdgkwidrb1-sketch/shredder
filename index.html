@@ -122,8 +122,7 @@
   </div>
 </div>
 <script>
-const API_URL = "https://jsonbin.io";
-const API_KEY = "$2a$10$JdoKVhnvgIn74GTl6aHmr.3rj8ywjQ5TrOTt5cBdYn9.X4dy8abpu";
+const SHEET_URL = "https://google.com";
 const el = i => document.getElementById(i);
 let db = [], cur = '';
 el('fDate').value = new Date().toISOString().split('T').at(0);
@@ -134,9 +133,9 @@ const badge = t => {
 };
 async function loadDB() {
   try {
-    const res = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': API_KEY } });
+    const res = await fetch(SHEET_URL);
     const data = await res.json();
-    db = (data.record && Array.isArray(data.record.records)) ? data.record.records : [];
+    db = Array.isArray(data) ? data : [];
   } catch (e) {
     alert('데이터 로드 오류: ' + e.message);
   }
@@ -144,10 +143,10 @@ async function loadDB() {
   drawRecent();
 }
 async function saveDB() {
-  await fetch(API_URL, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
-    body: JSON.stringify({ records: db })
+  await fetch(SHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(db)
   });
 }
 const syncList = () => { el('cList').innerHTML = [...new Set(db.map(x=>x.name))].map(n=>`<option value="${n}">`).join(''); };
