@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>문서파쇄 거래처 관리</title>
+<style>
+  body { font-family: 'Malgun Gothic', sans-serif; background: #f0f2f5; margin: 0; padding: 14px; color: #222; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; }
+  h1 { margin: 0 0 18px; font-size: 22px; color: #1a237e; text-align: center; }
+  h2 { margin: 0 0 14px; font-size: 17px; border-left: 4px solid #1a237e; padding-left: 10px; }
+  .row { display: flex; gap: 8px; }
+  input, select { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; width: 100%; box-sizing: border-box; background: #fff; }
+  .row input { font-size: 17px; border: 2px solid #1a237e; }
+  button { border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: #fff; }
+  .btn-blue { background: #1a237e; padding: 12px 22px; font-size: 17px; white-space: nowrap; }
+  .btn-green { background: #2e7d32; width: 100%; padding: 15px; font-size: 17px; }
+  .btn-gray { background: #666; padding: 8px 14px; font-size: 13px; }
+  .btn-edit { background: #0277bd; padding: 7px 12px; font-size: 13px; border-radius: 5px; margin-top: 8px; }
+  .btn-red { background: #e53935; padding: 5px 9px; font-size: 12px; border-radius: 4px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .full { grid-column: span 2; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 15px 0; }
+  .stat { background: #f8f9fa; padding: 12px 6px; border-radius: 8px; text-align: center; border: 1px solid #e0e0e0; font-size: 13px; }
+  .stat b { display: block; font-size: 17px; margin-top: 4px; }
+  .meta { background: #eef2f7; padding: 14px; border-radius: 8px; font-size: 15px; line-height: 1.7; }
+  .edit-box { display: none; background: #fff8e1; border: 1px solid #ffe082; padding: 14px; border-radius: 8px; margin-top: 10px; }
+  .t-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; white-space: nowrap; }
+  th, td { border-bottom: 1px solid #ddd; padding: 10px 8px; text-align: center; }
+  th { background: #f4f6f8; }
+  .link { color: #1a237e; font-weight: bold; cursor: pointer; text-decoration: underline; }
+  .red { color: #d32f2f; font-weight: bold; }
+  .badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #fff; }
+  .b-1 { background: #1565c0; } .b-2 { background: #2e7d32; } .b-3 { background: #6a1b9a; }
+  .b-4 { background: #ef6c00; } .b-5 { background: #00838f; } .b-etc { background: #757575; }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+    .full { grid-column: span 1; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>📄 문서파쇄 거래처 관리 시스템</h1>
+  <div id="vHome">
+    <div class="card">
+      <h2>업체명으로 검색하기</h2>
+      <div class="row">
+        <input id="qInput" placeholder="업체명을 입력하세요" list="cList">
+        <datalist id="cList"></datalist>
+        <button class="btn-blue" id="bSearch">확인</button>
+      </div>
+    </div>
+    <div style="margin-bottom:16px"><button class="btn-green" id="bOpen">+ 새 거래 기록 추가하기</button></div>
+    <div id="fCard" class="card" style="display:none; border:2px solid #2e7d32">
+      <div class="row" style="justify-content:space-between; align-items:center; margin-bottom:15px">
+        <h2 style="margin:0; border-color:#2e7d32">새 거래 기록 입력</h2>
+        <button class="btn-gray" id="bClose">닫기 ✕</button>
+      </div>
+      <div class="grid">
+        <input id="fName" placeholder="업체명 (기존 업체 입력 시 자동완성)" list="cList">
+        <input id="fDate" type="date">
+        <select id="fType">
+          <option value="입고파쇄">작업구분: 입고파쇄</option>
+          <option value="현장파쇄">작업구분: 현장파쇄</option>
+          <option value="하드파쇄">작업구분: 하드파쇄</option>
+          <option value="폐기물수거">작업구분: 폐기물수거</option>
+          <option value="컴퓨터수거">작업구분: 컴퓨터수거</option>
+        </select>
+        <input id="fVol" placeholder="파쇄량 / 수량 (예: 500kg / 20대)">
+        <input id="fMgr" placeholder="담당자명">
+        <input id="fTel" placeholder="연락처">
+        <input id="fAddr" class="full" placeholder="주소">
+        <input id="fPay" placeholder="결제조건 (계좌이체, 현금, 카드 등)">
+        <input id="fAmt" type="number" placeholder="거래금액 (숫자만)">
+        <input id="fUnp" type="number" placeholder="미수금 (없으면 0)">
+        <input id="fMemo" placeholder="비고">
+        <button class="btn-green full" id="bSave">저장하기</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>최근 거래 기록</h2>
+      <div class="t-wrap">
+        <table>
+          <thead><tr><th>거래날짜</th><th>업체명</th><th>작업구분</th><th>파쇄량</th><th>거래금액</th><th>미수금</th><th>담당자</th><th>연락처</th></tr></thead>
+          <tbody id="tRecent"><tr><td colspan="8" style="padding:20px;color:#888">데이터 불러오는 중...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div id="vDetail" style="display:none">
+    <button class="btn-gray" id="bBack" style="margin-bottom:15px">← 처음 화면으로</button>
+    <div class="card">
+      <h2 id="dTitle" style="font-size:22px; color:#1a237e; border:none; padding:0"></h2>
+      <div id="dMeta" class="meta"></div>
+      <div id="editBox" class="edit-box">
+        <div class="grid">
+          <input id="eMgr" placeholder="새 담당자명">
+          <input id="eTel" placeholder="새 연락처">
+          <input id="eAddr" class="full" placeholder="새 주소">
+          <button class="btn-blue" id="bSaveEdit" style="font-size:15px; padding:12px">수정 저장</button>
+          <button class="btn-gray" id="bCancelEdit">취소</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat">총 이용횟수<b id="sCnt">0회</b></div>
+        <div class="stat">첫 거래일<b id="sFirst">-</b></div>
+        <div class="stat">최근 거래일<b id="sLast" style="color:#1a237e">-</b></div>
+        <div class="stat">누적 미수금<b id="sUnp" class="red">0원</b></div>
+      </div>
+      <h2>전체 거래 내역</h2>
+      <div class="t-wrap">
+        <table>
+          <thead><tr><th>날짜</th><th>작업구분</th><th>파쇄량</th><th>거래금액</th><th>미수금</th><th>결제조건</th><th>비고</th><th>관리</th></tr></thead>
+          <tbody id="tHist"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const DB_URL = "https://firebaseio.com";
+const $ = i => document.getElementById(i);
+let db = [], cur = '';
+$('fDate').value = new Date().toISOString().split('T').at(0);
+const won = n => (Number(n)||0).toLocaleString() + '원';
+const badge = t => {
+  const m = {'입고파쇄':'b-1','현장파쇄':'b-2','하드파쇄':'b-3','폐기물수거':'b-4','컴퓨터수거':'b-5'};
+  return `<span class="badge ${m[t]||'b-etc'}">${t||'-'}</span>`;
+};
+async function loadDB() {
+  try {
+    const res = await fetch(DB_URL);
+    const data = await res.json();
+    db = data ? Object.values(data) : [];
+  } catch (e) {
+    alert('데이터를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
+  }
+  syncList();
+  drawRecent();
+}
+async function saveDB() {
+  await fetch(DB_URL, { method: 'PUT', body: JSON.stringify(db) });
+}
+const syncList = () => { $('cList').innerHTML = [...new Set(db.map(x=>x.name))].map(n=>`<option value="${n}">`).join(''); };
+const drawRecent = () => {
+  if(!db.length) return $('tRecent').innerHTML = '<tr><td colspan="8" style="padding:20px;color:#888">등록된 기록이 없습니다.</td></tr>';
+  $('tRecent').innerHTML = [...db].sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).slice(0,10).map(x=>`<tr>
+    <td>${x.date}</td><td><span class="link" onclick="showDetail('${x.name.replace(/'/g,"\\'")}')">${x.name}</span></td>
+    <td>${badge(x.type)}</td><td>${x.vol}</td><td>${won(x.amt)}</td><td class="${x.unp>0?'red':''}">${won(x.unp)}</td><td>${x.mgr}</td><td>${x.tel}</td>
+  </tr>`).join('');
+};
+function showDetail(n) {
+  const q = (n || $('qInput').value).trim();
+  if(!q) return alert('업체명을 입력하세요.');
+  cur = q;
+  $('editBox').style.display = 'none';
+  const list = db.filter(x=>x.name===q).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  $('vHome').style.display = 'none'; $('vDetail').style.display = 'block'; $('dTitle').innerText = '🏢 ' + q;
+  if(!list.length) {
+    $('dMeta').style.display = 'none'; $('sCnt').innerText = '0회'; $('sFirst').innerText = '-'; $('sLast').innerText = '-'; $('sUnp').innerText = '0원';
+    return $('tHist').innerHTML = '<tr><td colspan="8" style="padding:20px;color:#888">거래 기록이 없습니다.</td></tr>';
+  }
+  const top = list.at(0);
+  const first = list.at(-1);
+  const types = [...new Set(list.map(x=>x.type).filter(Boolean))].join(', ') || '-';
+  $('dMeta').style.display = 'block';
+  $('dMeta').innerHTML = `👤 <b>담당자:</b> ${top.mgr} &nbsp;|&nbsp; 📞 <b>연락처:</b> ${top.tel} &nbsp;|&nbsp; 🚛 <b>이용 작업:</b> <b>${types}</b><br>📍 <b>주소:</b> ${top.addr}<br><button class="btn-edit" onclick="openEdit()">✏️ 담당자/연락처 수정</button>`;
+  $('sCnt').innerText = list.length + '회'; $('sFirst').innerText = first.date; $('sLast').innerText = top.date;
+  $('sUnp').innerText = won(list.reduce((s,x)=>s+(Number(x.unp)||0),0));
+  $('tHist').innerHTML = list.map(x=>`<tr>
+    <td><b>${x.date}</b></td><td>${badge(x.type)}</td><td>${x.vol}</td><td>${won(x.amt)}</td><td class="${x.unp>0?'red':''}">${won(x.unp)}</td>
+    <td>${x.pay}</td><td>${x.memo}</td>
+    <td><button class="btn-red" onclick="delItem(${x.id})">삭제</button></td>
+  </tr>`).join('');
+}
+function openEdit() {
+  const top = db.filter(x=>x.name===cur).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).at(0);
+  if(!top) return;
+  $('eMgr').value = top.mgr === '-' ? '' : top.mgr;
+  $('eTel').value = top.tel === '-' ? '' : top.tel;
+  $('eAddr').value = top.addr === '-' ? '' : top.addr;
+  $('editBox').style.display = 'block';
+}
+$('bCancelEdit').onclick = () => { $('editBox').style.display = 'none'; };
+$('bSaveEdit').onclick = async () => {
+  const mgr = $('eMgr').value.trim() || '-', tel = $('eTel').value.trim() || '-', addr = $('eAddr').value.trim() || '-';
+  db.forEach(x => { if(x.name === cur) { x.mgr = mgr; x.tel = tel; x.addr = addr; } });
+  await saveDB();
+  showDetail(cur);
+  alert('담당자 및 연락처 정보가 수정되었습니다.');
+};
+async function delItem(id) {
+  if(!confirm('삭제할까요?')) return;
+  db = db.filter(x=>x.id!==id);
+  await saveDB();
+  syncList(); showDetail(cur);
+}
+$('fName').oninput = () => {
+  const val = $('fName').value.trim();
+  const found = db.filter(x=>x.name===val).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).at(0);
+  if(found) {
+    $('fMgr').value = found.mgr === '-' ? '' : found.mgr;
+    $('fTel').value = found.tel === '-' ? '' : found.tel;
+    $('fAddr').value = found.addr === '-' ? '' : found.addr;
+  }
+};
+$('bOpen').onclick = () => { $('fCard').style.display='block'; $('bOpen').style.display='none'; };
+$('bClose').onclick = () => { $('fCard').style.display='none'; $('bOpen').style.display='block'; };
+$('bSearch').onclick = () => showDetail();
+$('qInput').onkeyup = e => { if(e.key==='Enter') showDetail(); };
+$('bBack').onclick = () => { $('vDetail').style.display='none'; $('vHome').style.display='block'; $('qInput').value=''; loadDB(); };
+$('bSave').onclick = async () => {
+  const name = $('fName').value.trim(), date = $('fDate').value;
+  if(!name || !date) return alert('업체명과 날짜는 필수입니다.');
+  $('bSave').disabled = true; $('bSave').innerText = '저장 중...';
+  db.push({ id:Date.now(), name, date, type:$('fType').value, mgr:$('fMgr').value.trim()||'-', tel:$('fTel').value.trim()||'-',
+    addr:$('fAddr').value.trim()||'-', vol:$('fVol').value.trim()||'-', pay:$('fPay').value.trim()||'-',
+    amt:Number($('fAmt').value)||0, unp:Number($('fUnp').value)||0, memo:$('fMemo').value.trim()||'-' });
+  await saveDB();
+  ['fName','fMgr','fTel','fAddr','fVol','fPay','fAmt','fUnp','fMemo'].forEach(k=>$(k).value='');
+  $('bSave').disabled = false; $('bSave').innerText = '저장하기';
+  syncList(); $('bClose').click(); drawRecent(); alert('저장되었습니다.');
+};
+loadDB();
+</script>
+</body>
+</html>
