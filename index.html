@@ -122,7 +122,9 @@
   </div>
 </div>
 <script>
-const DB_URL = "https://firebasedatabase.app";
+const BIN_ID = "6af5ad77ffd5d16053bbea46";
+const API_KEY = "$2a$10$JdoKVhnvgIn74GTl6aHmr.3rj8ywjQ5TrOTt5cBdYn9.X4dy8abpu";
+const API_URL = `https://jsonbin.io{BIN_ID}`;
 const $ = i => document.getElementById(i);
 let db = [], cur = '';
 $('fDate').value = new Date().toISOString().split('T').at(0);
@@ -133,9 +135,9 @@ const badge = t => {
 };
 async function loadDB() {
   try {
-    const res = await fetch(DB_URL);
+    const res = await fetch(API_URL + '/latest', { headers: { 'X-Master-Key': API_KEY } });
     const data = await res.json();
-    db = data ? Object.values(data) : [];
+    db = (data.record && Array.isArray(data.record.records)) ? data.record.records : [];
   } catch (e) {
     alert('데이터를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.');
   }
@@ -143,7 +145,11 @@ async function loadDB() {
   drawRecent();
 }
 async function saveDB() {
-  await fetch(DB_URL, { method: 'PUT', body: JSON.stringify(db) });
+  await fetch(API_URL, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+    body: JSON.stringify({ records: db })
+  });
 }
 const syncList = () => { $('cList').innerHTML = [...new Set(db.map(x=>x.name))].map(n=>`<option value="${n}">`).join(''); };
 const drawRecent = () => {
